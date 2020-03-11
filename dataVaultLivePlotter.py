@@ -2,12 +2,14 @@ from __future__ import division
 import sys
 import os
 import os.path
+from pathlib import Path
 import twisted
-from PyQt4 import QtCore, QtGui, QtTest, uic
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import QApplication, QPrinter
-from PyQt4.QtWebKit import QWebView
+from PyQt5 import QtCore, QtGui, QtTest, uic, QtWidgets, QtPrintSupport
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtPrintSupport import QPrinter
+#from PyQt5.QtWebEngineWidgets import QWebEngineView
 from twisted.internet.defer import inlineCallbacks, Deferred
 import numpy as np
 import pyqtgraph as pg
@@ -28,21 +30,19 @@ except:
     print("--------------PyPDF2 not installed... Merge PDF function disabled--------------")
 
 
-
-path = sys.path[0]
-
-sys.path.append(sys.path[0] + '\Resources')
+path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(path, 'Resources'))
 import dvPlotterResources_rc
 
-mainWinGUI = path + r"\startPlotter.ui"
-plotExtentGUI = path + r"\extentPrompt.ui"
-dvExplorerGUI = path + r"\dvExplorer.ui"
-dirExplorerGUI = path + r"\dirExplorer.ui"
-editInfoGUI = path + r"\editDatasetInfo.ui"
-plotSetupUI = path + r"\plotSetup.ui"
-helpWindowUI = path + r"\helpWindow.ui"
+mainWinGUI = os.path.join(path, 'startPlotter.ui')
+plotExtentGUI = os.path.join(path, 'extentPrompt.ui')
+dvExplorerGUI = os.path.join(path, 'dvExplorer.ui')
+dirExplorerGUI = os.path.join(path, 'dirExplorer.ui')
+editInfoGUI = os.path.join(path, 'editDatasetInfo.ui')
+plotSetupUI = os.path.join(path, 'plotSetup.ui')
+helpWindowUI = os.path.join(path, 'helpWindow.ui')
 
-guiIconPath = path + r"\hex.svg"
+guiIconPath = os.path.join(path, 'hex.svg')
 
 Ui_MainWin, QtBaseClass = uic.loadUiType(mainWinGUI)
 Ui_ExtPrompt, QtBaseClass = uic.loadUiType(plotExtentGUI)
@@ -433,11 +433,11 @@ class extentPrompt(QtGui.QDialog, Ui_ExtPrompt):
         headers = [min, max, pts]
         
         min.setText('Minimum Value')        
-        min.setTextColor(QtGui.QColor(131,131,131))
+        min.setForeground(QBrush(QColor(131,131,131)))
         max.setText('Maximum Value')
-        max.setTextColor(QtGui.QColor(131,131,131))
+        max.setForeground(QBrush(QColor(131,131,131)))
         pts.setText('Number of Points')
-        pts.setTextColor(QtGui.QColor(131,131,131))
+        pts.setForeground(QBrush(QColor(131,131,131)))
 
         for ii in range(0, 3):
             self.extTable.setItem(0, ii+1, headers[ii])
@@ -459,7 +459,7 @@ class extentPrompt(QtGui.QDialog, Ui_ExtPrompt):
             for c in range(1, 4):
                 item = QtGui.QTableWidgetItem()
                 self.extTable.setItem(r, c, item)
-                self.extTable.item(r, c).setBackgroundColor(QtGui.QColor(255,255,255))
+                self.extTable.item(r, c).setBackground(QBrush(QColor(255,255,255)))
 
     def moveDefault(self):
         self.move(self.x0, self.y0)
@@ -470,7 +470,7 @@ class extentPrompt(QtGui.QDialog, Ui_ExtPrompt):
         
         for r in range(1, len(self.plotInfo) + 1):
             for c in range(1, 4):
-                self.extTable.item(r, c).setBackgroundColor(QtGui.QColor(255,255,255))
+                self.extTable.item(r, c).setBackground(QBrush(QColor(255,255,255)))
         
         for r in range(1, self.extTable.rowCount()):
             try:
@@ -495,7 +495,7 @@ class extentPrompt(QtGui.QDialog, Ui_ExtPrompt):
             self.accept()
         else:
             for ii in range(0, len(errCell)):
-                self.extTable.item(errCell[ii][0], errCell[ii][1]).setBackgroundColor(QtGui.QColor(250,190,160))
+                self.extTable.item(errCell[ii][0], errCell[ii][1]).setBackground(QBrush(QColor(250,190,160)))
                 
     def closeEvent(self, e):
         self.reject()
@@ -1353,13 +1353,13 @@ class plotSaved1DWindow(QtGui.QWidget):
         self.backBtn1.setStyleSheet("QPushButton#backBtn1 {color:rgb(131,131,131);background-color:black;border: 2px solid rgb(131,131,131);border-radius: 5px; height: 38px; width: 70px}")
         
         self.saveMATBtn.setObjectName('saveMATBtn')
-        self.saveMATBtn.setStyleSheet("QPushButton#saveMATBtn {image:url(:/dvPlotter/Pictures/saveMATLAB.png);background-color: transparent; height: 23px; width: 23px;}")
+        self.saveMATBtn.setStyleSheet("QPushButton#saveMATBtn {border-image:url(:/dvPlotter/Pictures/saveMATLAB.png);background-color: transparent; height: 23px; width: 23px;}")
         self.savePDFBtn.setObjectName('savePDFBtn')
-        self.savePDFBtn.setStyleSheet("QPushButton#savePDFBtn {image:url(:/dvPlotter/Pictures/savePDF.png);background-color: transparent; height: 23px; width: 23px;}")
+        self.savePDFBtn.setStyleSheet("QPushButton#savePDFBtn {border-image:url(:/dvPlotter/Pictures/savePDF.png);background-color: transparent; height: 23px; width: 23px;}")
         self.editNotesBtn.setObjectName('editNotesBtn')
-        self.editNotesBtn.setStyleSheet("QPushButton#editNotesBtn {image:url(:/dvPlotter/Pictures/editNotes.png);background-color: transparent; height: 15px; width: 23px;}")
+        self.editNotesBtn.setStyleSheet("QPushButton#editNotesBtn {border-image:url(:/dvPlotter/Pictures/editNotes.png);background-color: transparent; height: 15px; width: 23px;}")
         self.openDVBtn.setObjectName('openDVBtn')
-        self.openDVBtn.setStyleSheet("QPushButton#openDVBtn {image:url(:/dvPlotter/Pictures/browse.png); background-color: transparent; height: 18px; width: 18px;}")
+        self.openDVBtn.setStyleSheet("QPushButton#openDVBtn {border-image:url(:/dvPlotter/Pictures/browse.png); background-color: transparent; height: 18px; width: 18px;}")
         
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1,5)
@@ -1547,7 +1547,7 @@ class plotSaved1DWindow(QtGui.QWidget):
         if self.noteEdits.accepted:
             self.notes = self.noteEdits.textEditor.toPlainText()
         
-class plotSaved2DWindow(QtGui.QWidget):
+class plotSaved2DWindow(QtWidgets.QWidget):
     def __init__(self, reactor, fileDV, dir, plotInfo, yMovePos ):
         super(plotSaved2DWindow, self).__init__()
 
@@ -1564,8 +1564,8 @@ class plotSaved2DWindow(QtGui.QWidget):
         self.yAxis = self.plotInfo['y axis']
         self.zAxis = self.plotInfo['z axis']
         
-        self.connect(QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL+ QtCore.Qt.Key_C), self), QtCore.SIGNAL('activated()'),self.copyPlotToClip)
-
+        #self.connect(QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL+ QtCore.Qt.Key_C), self), QtCore.SIGNAL('activated()'),self.copyPlotToClip)
+        QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL+ QtCore.Qt.Key_C), self).activated.connect(self.copyPlotToClip)
         self.notes = ''
         self.plotTitle = self.plotInfo['title']
         if self.plotTitle[0:5] == 'Plot ':
@@ -1698,13 +1698,13 @@ class plotSaved2DWindow(QtGui.QWidget):
         self.backBtn1.setStyleSheet("QPushButton#backBtn1 {color:rgb(131,131,131);background-color:black;border: 2px solid rgb(131,131,131);border-radius: 5px; height: 38px; width: 70px}")
         
         self.saveMATBtn.setObjectName('saveMATBtn')
-        self.saveMATBtn.setStyleSheet("QPushButton#saveMATBtn {image:url(:/dvPlotter/Pictures/saveMATLAB.png);background-color: transparent; height: 23px; width: 23px;}")
+        self.saveMATBtn.setStyleSheet("QPushButton#saveMATBtn {border-image:url(:/dvPlotter/Pictures/saveMATLAB.png);background-color: transparent; height: 23px; width: 23px;}")
         self.savePDFBtn.setObjectName('savePDFBtn')
-        self.savePDFBtn.setStyleSheet("QPushButton#savePDFBtn {image:url(:/dvPlotter/Pictures/savePDF.png);background-color: transparent; height: 23px; width: 23px;}")
+        self.savePDFBtn.setStyleSheet("QPushButton#savePDFBtn {border-image:url(:/dvPlotter/Pictures/savePDF.png);background-color: transparent; height: 23px; width: 23px;}")
         self.editNotesBtn.setObjectName('editNotesBtn')
-        self.editNotesBtn.setStyleSheet("QPushButton#editNotesBtn {image:url(:/dvPlotter/Pictures/editNotes.png);background-color: transparent; height: 15px; width: 23px;}")
+        self.editNotesBtn.setStyleSheet("QPushButton#editNotesBtn {border-image:url(:/dvPlotter/Pictures/editNotes.png);background-color: transparent; height: 15px; width: 23px;}")
         self.openDVBtn.setObjectName('openDVBtn')
-        self.openDVBtn.setStyleSheet("QPushButton#openDVBtn {image:url(:/dvPlotter/Pictures/browse.png); background-color: transparent; height: 18px; width: 18px;}")
+        self.openDVBtn.setStyleSheet("QPushButton#openDVBtn {border-image:url(:/dvPlotter/Pictures/browse.png); background-color: transparent; height: 18px; width: 18px;}")
         
         
 
@@ -2188,9 +2188,13 @@ class textEditor(QtGui.QPlainTextEdit):
         
         self.lineNumberArea = LineNumberArea(self)
 
-        self.connect(self, QtCore.SIGNAL('blockCountChanged(int)'), self.updateLineNumberAreaWidth)
-        self.connect(self, QtCore.SIGNAL('updateRequest(QRect,int)'), self.updateLineNumberArea)
-        self.connect(self, QtCore.SIGNAL('cursorPositionChanged()'), self.highlightCurrentLine)
+        #self.connect(self, QtCore.SIGNAL('blockCountChanged(int)'), self.updateLineNumberAreaWidth)
+        #self.connect(self, QtCore.SIGNAL('updateRequest(QRect,int)'), self.updateLineNumberArea)
+        #self.connect(self, QtCore.SIGNAL('cursorPositionChanged()'), self.highlightCurrentLine)
+
+        self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
+        self.updateRequest.connect(self.updateLineNumberArea)
+        self.cursorPositionChanged.connect(self.highlightCurrentLine)
 
         self.updateLineNumberAreaWidth(0)
 
@@ -2368,26 +2372,26 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
         headers = [lbl1, x1, y1, lbl2, x2, y2, z2]
         
         num1.setText('Plot')
-        num1.setTextColor(QtGui.QColor(131,131,131))
+        num1.setForeground(QBrush(QColor(131,131,131)))
         num2.setText('Plot')
-        num2.setTextColor(QtGui.QColor(131,131,131))
+        num2.setForeground(QBrush(QColor(131,131,131)))
         
         lbl1.setText('Plot Title')
-        lbl1.setTextColor(QtGui.QColor(131,131,131))
+        lbl1.setForeground(QBrush(QColor(131,131,131)))
         lbl2.setText('Plot Title')
-        lbl2.setTextColor(QtGui.QColor(131,131,131))
+        lbl2.setForeground(QBrush(QColor(131,131,131)))
         
         x1.setText('X Axis')
-        x1.setTextColor(QtGui.QColor(131,131,131))
+        x1.setForeground(QBrush(QColor(131,131,131)))
         y1.setText('Y Axis')
-        y1.setTextColor(QtGui.QColor(131,131,131))
+        y1.setForeground(QBrush(QColor(131,131,131)))
         
         x2.setText('X Axis')
-        x2.setTextColor(QtGui.QColor(131,131,131))
+        x2.setForeground(QBrush(QColor(131,131,131)))
         y2.setText('Y Axis')
-        y2.setTextColor(QtGui.QColor(131,131,131))
+        y2.setForeground(QBrush(QColor(131,131,131)))
         z2.setText('Z Axis')
-        z2.setTextColor(QtGui.QColor(131,131,131))
+        z2.setForeground(QBrush(QColor(131,131,131)))
         
         for ii in range(0, 3):
             self.onePlots.setItem(0, ii, headers[ii])
@@ -2414,7 +2418,7 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
                 for r in range(0, self.onePlots.rowCount()):
                     if self.onePlots.item(r, c) != None:
                         self.onePlots.item(r, c).setBackground(QtGui.QColor(0,0,0))
-                        self.onePlots.item(r, c).setTextColor(QtGui.QColor(131,131,131))
+                        self.onePlots.item(r, c).setForeground(QBrush(QColor(131,131,131)))
                         if c != 0:
                             self.onePlots.item(r, c).setFlags(QtCore.Qt.NoItemFlags)
                         elif c == 0 and r != 0:
@@ -2422,14 +2426,14 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
                             item = self.onePlots.item(r, c)
                             if item.text() == '':
                                 item.setText(self.backtext1)
-                            item.setBackgroundColor(QtGui.QColor(100,100,150))
-                            item.setTextColor(QtGui.QColor(0,0,0))
+                            item.setBackground(QBrush(QColor(100,100,150)))
+                            item.setForeground(QBrush(QColor(0,0,0)))
         elif num ==2:
             for c in range(0, 4):
                 for r in range(0, self.twoPlots.rowCount()):
                     if self.twoPlots.item(r, c) != None:
                         self.twoPlots.item(r, c).setBackground(QtGui.QColor(0,0,0))
-                        self.twoPlots.item(r, c).setTextColor(QtGui.QColor(131,131,131))    
+                        self.twoPlots.item(r, c).setForeground(QBrush(QColor(131,131,131)))    
                         if c != 0:
                             self.twoPlots.item(r, c).setFlags(QtCore.Qt.NoItemFlags)
                         elif c == 0 and r != 0:
@@ -2437,8 +2441,8 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
                             item = self.twoPlots.item(r, c)
                             if item.text() == '':
                                 item.setText(self.backtext2)
-                            item.setBackgroundColor(QtGui.QColor(100,100,150))
-                            item.setTextColor(QtGui.QColor(0,0,0))
+                            item.setBackground(QBrush(QColor(100,100,150)))
+                            item.setForeground(QBrush(QColor(0,0,0)))
         else:
             pass
         self.formFlag = True
@@ -2720,10 +2724,10 @@ class dirExplorer(QtGui.QDialog, Ui_DirExp):
         l = yield self.dv.dir()
         for i in l[0]:
             self.dirList.addItem(i)
-            self.dirList.item(self.dirList.count() - 1).setTextColor(QtGui.QColor(131,131,131))
+            self.dirList.item(self.dirList.count() - 1).setForeground(QBrush(QColor(131,131,131)))
         for i in l[1]:
             self.fileList.addItem(i)
-            self.fileList.item(self.fileList.count() - 1).setTextColor(QtGui.QColor(131,131,131))
+            self.fileList.item(self.fileList.count() - 1).setForeground(QBrush(QColor(131,131,131)))
         if self.currentDir[-1] == '':
             
             self.dirName.setText('Root')
@@ -2853,10 +2857,10 @@ class dataVaultExplorer(QtGui.QDialog, Ui_DataVaultExp):
         l = yield self.dv.dir()
         for i in l[0]:
             self.dirList.addItem(i)
-            self.dirList.item(self.dirList.count() - 1).setTextColor(QtGui.QColor(131,131,131))
+            self.dirList.item(self.dirList.count() - 1).setForeground(QBrush(QColor(131,131,131)))
         for i in l[1]:
             self.fileList.addItem(i)
-            self.fileList.item(self.fileList.count() - 1).setTextColor(QtGui.QColor(131,131,131))
+            self.fileList.item(self.fileList.count() - 1).setForeground(QBrush(QColor(131,131,131)))
         if self.currentDir[-1] == '':
             
             self.dirName.setText('Root')
@@ -2952,8 +2956,8 @@ class helpTextWindow(QtGui.QMainWindow, Ui_HelpWindow):
 if __name__ == "__main__":
     global app
     app = QtGui.QApplication([])
-    from qtreactor import pyqt4reactor
-    pyqt4reactor.install()
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     window = dvPlotter(reactor)
     window.show()
