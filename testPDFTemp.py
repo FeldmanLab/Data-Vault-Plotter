@@ -2,8 +2,9 @@ import sys
 import os
 import random
 from jinja2 import Environment, PackageLoader
-from PyQt4.QtGui import QApplication, QPrinter
-from PyQt4.QtWebKit import QWebView
+from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWebKitWidgets import QWebView
 
 path = sys.path[0]
 os.chdir(path)
@@ -18,7 +19,7 @@ def render_template(template_file, **kwargs):
  
  
 def print_pdf(html, destination):
-	#app = QApplication(sys.argv)
+	app = QApplication(sys.argv)
  
 	web = QWebView()
 	web.setHtml(html)
@@ -45,7 +46,7 @@ def main():
 		
 	)
  
-	print_pdf(html, "file.pdf")
+	print_pdf(html, "file2.pdf")
  
  
 if __name__ == "__main__":

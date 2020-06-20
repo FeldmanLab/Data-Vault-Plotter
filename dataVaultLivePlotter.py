@@ -9,6 +9,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtWebKitWidgets import QWebView
 #from PyQt5.QtWebEngineWidgets import QWebEngineView
 from twisted.internet.defer import inlineCallbacks, Deferred
 import numpy as np
@@ -262,7 +263,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                 print("Following error was thrown: ")
                 print(str(inst))
                 print("Error thrown on line: ")
-                print(sys.exc_info()[2])
+                print(sys.exc_info()[2].tb_lineno)
             plt1, plt2 = len(self.existing1DPlotDict), len(self.existing2DPlotDict)
             
             try: 
@@ -300,7 +301,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                 print("Following error was thrown: ")
                 print(str(inst))
                 print("Error thrown on line: ")
-                print(sys.exc_info()[2])
+                print(sys.exc_info()[2].tb_lineno)
         elif fresh == 1:
             try: 
                 x0, y0 = 450, 25
@@ -316,7 +317,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                 x0, y0 = 1250, 25
                 for plot in onePlots:
                     num1Plots = len(self.existing1DPlotDict)
-                    new1DPlotName = '1DPlot_' + str(num2Plots)  
+                    new1DPlotName = '1DPlot_' + str(num1Plots)  
                     setattr(self, new1DPlotName, plot1DWindow(self.reactor, onePlots[plot], self.listenTo, self.listenPlotFile, x0, y0, fresh, new1DPlotName, self))
                     windowObj = getattr(self, new1DPlotName)
                     windowObj.show()
@@ -327,7 +328,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                 print("Following error was thrown: ")
                 print(str(inst))
                 print("Error thrown on line: ")
-                print(sys.exc_info()[2])
+                print(sys.exc_info()[2].tb_lineno)
         
         self.allowPlot = True
             
@@ -345,7 +346,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                     print("Following error was thrown: ")
                     print(str(inst))
                     print("Error thrown on line: ")
-                    print(sys.exc_info()[2]) 
+                    print(sys.exc_info()[2].tb_lineno) 
         elif dim == 1:
             for plot in allPlots:
                 try:
@@ -358,7 +359,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                     print("Following error was thrown: ")
                     print(str(inst))
                     print("Error thrown on line: ")
-                    print(sys.exc_info()[2])                      
+                    print(sys.exc_info()[2].tb_lineno)                      
 
     def plotLiveData(self):
         self.dvExplorer = dataVaultExplorer(self.reactor, 'live', self.listenTo, self)
@@ -616,7 +617,7 @@ class plot2DWindow(QtGui.QDialog):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2]) 
+            print(sys.exc_info()[2].tb_lineno) 
     @inlineCallbacks
     def addListen(self, c):
         yield self.dv.signal__data_available(self.id)
@@ -710,7 +711,7 @@ class plot2DWindow(QtGui.QDialog):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2])
+            print(sys.exc_info()[2].tb_lineno)
     
     def toggleTraceFunc(self):
         jj = self.i % 2
@@ -969,7 +970,7 @@ class plot2DWindow(QtGui.QDialog):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2]) 
+            print(sys.exc_info()[2].tb_lineno) 
     @inlineCallbacks
     def plotMore(self, newData, x_ind, y_ind, z_ind, c):
         yield self.sleep(0.1)
@@ -1187,7 +1188,7 @@ class plot1DWindow(QtGui.QDialog):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2])
+            print(sys.exc_info()[2].tb_lineno)
             
     @inlineCallbacks
     def addListen(self, c):
@@ -1198,20 +1199,21 @@ class plot1DWindow(QtGui.QDialog):
     def updatePlot(self, c, signal):
 
         newData = yield self.dv.get()
-        inx = np.delete(np.arange(0, len(newData[0])), [self.xIndex, self.yIndex])
-        newData = np.delete(np.asarray(newData), inx, axis = 1)
-        
-        x_ind = np.where(np.sort([self.xIndex, self.yIndex]) == self.xIndex)[0][0]
-        y_ind = np.where(np.sort([self.xIndex, self.yIndex]) == self.yIndex)[0][0]
+        if len(newData) >  0: # don't do anything if called for no new data (seems like it might be double calling)
+            inx = np.delete(np.arange(0, len(newData[0])), [self.xIndex, self.yIndex])
+            newData = np.delete(np.asarray(newData), inx, axis = 1)
+            
+            x_ind = np.where(np.sort([self.xIndex, self.yIndex]) == self.xIndex)[0][0]
+            y_ind = np.where(np.sort([self.xIndex, self.yIndex]) == self.yIndex)[0][0]
 
-        
-        if self.isData != False:
-            self.Data = np.vstack((self.Data, newData))
-        else:
-            self.Data = newData
-            self.isData = True
-        self.binned = np.digitize(self.Data[::, x_ind], self.xBins) - 1
-        yield self.plotMore(x_ind, y_ind, self.reactor)
+            
+            if self.isData != False:
+                self.Data = np.vstack((self.Data, newData))
+            else:
+                self.Data = newData
+                self.isData = True
+            self.binned = np.digitize(self.Data[::, x_ind], self.xBins) - 1
+            yield self.plotMore(x_ind, y_ind, self.reactor)
 
     @inlineCallbacks
     def plotMore(self, x_ind, y_ind, c):
@@ -1258,7 +1260,7 @@ class plot1DWindow(QtGui.QDialog):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2]) 
+            print(sys.exc_info()[2].tb_lineno) 
     def sleep(self,secs):
         d = Deferred()
         self.reactor.callLater(secs,d.callback,'Sleeping')
@@ -1888,7 +1890,7 @@ class plotSaved2DWindow(QtWidgets.QWidget):
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2])
+            print(sys.exc_info()[2].tb_lineno)
         
         self.mainPlot.setImage(self.plotData, autoRange = True , autoLevels = True, pos=[self.x0, self.y0],scale=[self.xscale, self.yscale])
         
@@ -1939,13 +1941,13 @@ class plotSaved2DWindow(QtWidgets.QWidget):
             
     def getSaveData(self, ext):
         if ext == 'pdf':
-            fold = str(QtGui.QFileDialog.getSaveFileName(self, directory = os.getcwd(), filter = "PDF Document (*.pdf)"))
+            fold,filt = QtGui.QFileDialog.getSaveFileName(self, directory = os.getcwd(), filter = "PDF Document (*.pdf)")
             if fold:
-                return fold
+                return str(fold)
         elif ext == 'mat':
-            fold = str(QtGui.QFileDialog.getSaveFileName(self, directory = os.getcwd(), filter = "MATLAB Data (*.mat)"))
+            fold,filt = QtGui.QFileDialog.getSaveFileName(self, directory = os.getcwd(), filter = "MATLAB Data (*.mat)")
             if fold:
-                return fold
+                return str(fold)
 
     def save1DMAT(self):
         fold  = self.getSaveData('mat')
@@ -1977,7 +1979,7 @@ class plotSaved2DWindow(QtWidgets.QWidget):
         fold = self.getSaveData('pdf')
         try:
             folder = '/'.join(fold.split("/")[0:-1]) + '/'
-            file = fold #fold.split("/")[-1]
+            file = fold.split("/")[-1]
         except:
             folder = os.getcwd()
             file = str(self.plotTitle) + time.strftime("%Y-%m-%d_%H:%M") + '.pdf'
@@ -2006,6 +2008,7 @@ class plotSaved2DWindow(QtWidgets.QWidget):
             colorAxisExp = pg.exporters.ImageExporter(self.mainPlot.ui.histogram.axis)
             colorBarExp = pg.exporters.ImageExporter(self.mainPlot.ui.histogram.gradient)
             #create QImages:
+
             main =mainExp.export(toBytes=True)
             colorAxis =colorAxisExp.export(toBytes=True)
             colorBar = colorBarExp.export(toBytes=True)
@@ -2054,7 +2057,6 @@ class plotSaved2DWindow(QtWidgets.QWidget):
         web.setHtml(html)
         application = app.instance()
         application.processEvents()
-     
         printer = QPrinter()
         printer.setPageSize(QPrinter.A4)
         printer.setOutputFormat(QPrinter.PdfFormat)
@@ -2089,13 +2091,12 @@ class plotSaved2DWindow(QtWidgets.QWidget):
                 parameters = parList,
                 paragraphs = prgs,
                 tmp_loc = temp_loc
-                
             )
         except Exception as inst:
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2])
+            print(sys.exc_info()[2].tb_lineno)
         
         if plot < 3:
             self.print_pdf(html, str(fileName))
@@ -2105,27 +2106,28 @@ class plotSaved2DWindow(QtWidgets.QWidget):
             self.print_pdf(html, str(tmp_pdf))
             merger = PdfFileMerger()
             try:
-                merger.append(PdfFileReader(file(toMerge, 'rb')))
-                merger.append(PdfFileReader(file(tmp_pdf, 'rb')))
+                merger.append(PdfFileReader(open(toMerge, 'rb')))
+                merger.append(PdfFileReader(open(tmp_pdf, 'rb')))
 
                 merger.write(toMerge)   
             except Exception as inst:
                 print("Following error was thrown: ")
                 print(str(inst))
                 print("Error thrown on line: ")
-                print(sys.exc_info()[2])
+                print(sys.exc_info()[2].tb_lineno)
         tmp_loc = ''
         yield self.sleep(0.5)
         try:
             if os.path.isfile(self.pdfFile):
                 os.remove(self.pdfFile)
+                pass
             if plot >= 3 and os.path.isfile(tmp_pdf):
                 os.remove(tmp_pdf)
         except Exception as inst:
             print("Following error was thrown: ")
             print(str(inst))
             print("Error thrown on line: ")
-            print(sys.exc_info()[2])
+            print(sys.exc_info()[2].tb_lineno)
         os.chdir(init_loc)
         
         
@@ -2644,7 +2646,7 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
                 print("Following error was thrown: ")
                 print(str(inst))
                 print("Error thrown on line: ")
-                print(sys.exc_info()[2]) 
+                print(sys.exc_info()[2].tb_lineno) 
         elif self.fresh == 2:
             print("2D Info: ", self.plot2DInfo)
             print("1D Info: ", self.plot1DInfo)
