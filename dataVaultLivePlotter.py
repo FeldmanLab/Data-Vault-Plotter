@@ -307,7 +307,8 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
                 x0, y0 = 450, 25
                 for plot in twoPlots:
                     num2Plots = len(self.existing2DPlotDict)
-                    new2DPlotName = '2DPlot_' + str(num2Plots)  
+                    new2DPlotName = '2DPlot_' + str(num2Plots)
+                    print(new2DPlotName)
                     setattr(self, new2DPlotName,  plot2DWindow(self.reactor, twoPlots[plot], self.listenTo, self.listenPlotFile, x0, y0, fresh, new2DPlotName, self))
                     windowObj = getattr(self, new2DPlotName)
                     windowObj.show()
@@ -516,7 +517,7 @@ class plot2DWindow(QtGui.QDialog):
         self.move(self.pX,self.pY)
         #fresh specifies if the dataset to be plotted already has data (1) or is empty (0)
         self.fresh = fresh
-        self.connect(QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL+ QtCore.Qt.Key_C), self), QtCore.SIGNAL('activated()'),self.copyPlotToClip)
+        #self.connect(QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL+ QtCore.Qt.Key_C), self), QtCore.SIGNAL('activated()'),self.copyPlotToClip)
         self.autoLevelMainplot = True
         self.cxnName = None
         self.definePlotParams()
@@ -604,8 +605,19 @@ class plot2DWindow(QtGui.QDialog):
                 r0 = np.where(np.all(self.plotData == self.randFill, axis = 0))[0]
                 c0 = np.where(np.all(self.plotData == self.randFill, axis = 1))[0]
                 self.tmp = np.delete(np.delete(self.plotData, r0, axis = 1), c0, axis = 0)
-                argX = np.min([self.extents[0],self.extents[1]]) + self.xscale * np.max(np.append(c0, -1) + 1)
-                argY = np.min([self.extents[2],self.extents[3]]) + self.yscale * np.max(np.append(r0, -1) + 1)
+                if 0 in c0:
+                    ccoeff = 1
+                else:
+                    ccoeff = 0
+                if 0 in r0:
+                    rcoeff = 1
+                else:
+                    rcoeff = 0                
+                argX = np.min([self.extents[0],self.extents[1]]) + ccoeff*self.xscale * np.max(np.append(c0, -1) + 1)
+                argY = np.min([self.extents[2],self.extents[3]]) + rcoeff*self.yscale * np.max(np.append(r0, -1) + 1)
+                
+
+ 
                 self.mainPlot.setImage(self.tmp, autoRange = False ,     autoLevels = False, pos=[argX, argY],scale=[self.xscale, self.yscale])
                 if self.autoLevelMainplot:
                     self.mainPlot.autoLevels()
@@ -774,7 +786,7 @@ class plot2DWindow(QtGui.QDialog):
         self.plotData = np.full([self.pxsize[0], self.pxsize[1]], self.randFill)
         self.rect = QtGui.QGraphicsRectItem(np.min([self.extents[0], self.extents[1]]), np.min([self.extents[2], self.extents[3]]), np.absolute(self.extents[1] - self.extents[0]), np.absolute(self.extents[3] - self.extents[2]))
         self.rect.setBrush(QtGui.QColor('transparent'))
-        self.viewBig.addItem(self.rect)
+        #self.viewBig.addItem(self.rect)
         
         self.xscale, self.yscale = np.absolute((self.extents[1] - self.extents[0])/self.pxsize[0]), np.absolute((self.extents[3] - self.extents[2])/self.pxsize[1])
         
@@ -981,8 +993,17 @@ class plot2DWindow(QtGui.QDialog):
         r0 = np.where(np.all(self.plotData == self.randFill, axis = 0))[0]
         c0 = np.where(np.all(self.plotData == self.randFill, axis = 1))[0]
         self.tmp = np.delete(np.delete(self.plotData, r0, axis = 1), c0, axis = 0)
-        argX = np.min([self.extents[0],self.extents[1]]) + self.xscale * np.max(np.append(c0, -1) + 1)
-        argY = np.min([self.extents[2],self.extents[3]]) + self.yscale * np.max(np.append(r0, -1) + 1)
+        if 0 in c0:
+            ccoeff = 1
+        else:
+            ccoeff = 0
+        if 0 in r0:
+            rcoeff = 1
+        else:
+            rcoeff = 0
+        argX = np.min([self.extents[0],self.extents[1]]) + ccoeff*self.xscale * np.max(np.append(c0, -1) + 1)
+        argY = np.min([self.extents[2],self.extents[3]]) + rcoeff*self.yscale * np.max(np.append(r0, -1) + 1)
+
         self.mainPlot.setImage(self.tmp, autoRange = False , autoLevels = False, pos=[argX, argY],scale=[self.xscale, self.yscale])
         if self.autoLevelMainplot:
             self.mainPlot.autoLevels()
@@ -1327,6 +1348,7 @@ class plotSaved1DWindow(QtGui.QWidget):
         
         self.saveMATBtn.clicked.connect(self.save1DMAT)
         self.savePDFBtn.clicked.connect(self.savePDF)
+        self.openDVBtn.clicked.connect(self.openDVParams)
         self.editNotesBtn.clicked.connect(self.openNotepad)
         
         self.saveMATBtn.setToolTip('Save plot as .mat file')
@@ -1379,6 +1401,7 @@ class plotSaved1DWindow(QtGui.QWidget):
         self.layout.addWidget(self.saveMATBtn, *(0, 8, 1, 1), alignment = QtCore.Qt.AlignRight)
         self.layout.addWidget(self.savePDFBtn, *(0, 9, 1, 1), alignment = QtCore.Qt.AlignRight)
         self.layout.addWidget(self.editNotesBtn, *(0, 10, 1, 1), alignment =QtCore.Qt.AlignRight) 
+        self.layout.addWidget(self.openDVBtn, *(0, 11, 1, 1), alignment =QtCore.Qt.AlignRight) 
 
 
         self.setLayout(self.layout)
@@ -1548,6 +1571,21 @@ class plotSaved1DWindow(QtGui.QWidget):
         self.noteEdits.exec_()
         if self.noteEdits.accepted:
             self.notes = self.noteEdits.textEditor.toPlainText()
+
+    @inlineCallbacks
+    def openDVParams(self,c):
+        dvText = ''
+        comments = yield self.dv.get_comments()
+        dvText += 'COMMENTS:\n'
+        for comment in comments:
+            dvText += str(comment[2]) + '\n'
+        params = yield self.dv.get_parameters()
+        dvText += '\n'
+        dvText += 'PARAMETERS:\n'
+        for param in params:
+            dvText += str(param[0])+': '+str(param[1])+'\n'
+        self.dvView = dvParams(dvText)
+        self.dvView.exec_()
         
 class plotSaved2DWindow(QtWidgets.QWidget):
     def __init__(self, reactor, fileDV, dir, plotInfo, yMovePos ):
@@ -1679,7 +1717,8 @@ class plotSaved2DWindow(QtWidgets.QWidget):
         self.savePDFBtn.setMenu(self.savePDFMenu)
         
         self.editNotesBtn.clicked.connect(self.openNotepad)
-        
+        self.openDVBtn.clicked.connect(self.openDVParams)
+
         self.saveMATBtn.setToolTip('Save plot as .mat file')
         self.savePDFBtn.setToolTip('Save plot and notes as PDF')
         self.openDVBtn.setToolTip('View data vault parameters and comments')
@@ -2139,6 +2178,21 @@ class plotSaved2DWindow(QtWidgets.QWidget):
         if self.noteEdits.accepted:
             self.notes = self.noteEdits.textEditor.toPlainText()
 
+    @inlineCallbacks
+    def openDVParams(self,c):
+        dvText = ''
+        comments = yield self.dv.get_comments()
+        dvText += 'COMMENTS:\n'
+        for comment in comments:
+            dvText += str(comment[2]) + '\n'
+        params = yield self.dv.get_parameters()
+        dvText += '\n'
+        dvText += 'PARAMETERS:\n'
+        for param in params:
+            dvText += str(param[0])+': '+str(param[1])+'\n'
+        self.dvView = dvParams(dvText)
+        self.dvView.exec_()
+
 class noteEditor(QtGui.QDialog):
     def __init__(self, notes):
         super(noteEditor, self).__init__()
@@ -2147,6 +2201,39 @@ class noteEditor(QtGui.QDialog):
 
         self.textEditor = textEditor()
         self.textEditor.setPlainText(self.notes)
+        
+        self.resize(400,400)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QtGui.QColor(0, 0, 0))
+        self.setPalette(p)
+        
+        self.okBtn = QtGui.QPushButton()
+        self.okBtn.setObjectName('okBtn')
+        self.okBtn.setText('OK')
+        self.okBtn.setStyleSheet("QPushButton#okBtn {color:rgb(131,131,131);background-color:black;border: 2px solid rgb(131,131,131);border-radius: 5px; width: 25px; font: 11pt}")
+        self.okBtn.clicked.connect(self.closeEdit)
+
+        self.layout = QtGui.QGridLayout(self)
+        self.layout.addWidget(self.textEditor, *(0, 0))
+        self.layout.addWidget(self.okBtn, *(1, 0), alignment = QtCore.Qt.AlignHCenter)
+        self.setLayout(self.layout)
+
+    def closeEdit(self):
+        self.accept()
+        self.hide()
+        
+    def closeEvent(self, e):
+        self.reject()
+        self.close()
+
+class dvParams(QtGui.QDialog):
+    def __init__(self, dvparams):
+        super(dvParams, self).__init__()
+        self.dvparams = dvparams
+        
+
+        self.textEditor = textEditor()
+        self.textEditor.setPlainText(self.dvparams)
         
         self.resize(400,400)
         p = self.palette()
