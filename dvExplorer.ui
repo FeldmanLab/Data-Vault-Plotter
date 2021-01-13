@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>593</width>
-    <height>341</height>
+    <width>917</width>
+    <height>404</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -24,7 +24,7 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>290</y>
+     <y>360</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -113,7 +113,7 @@ border-radius: 5px
      <x>30</x>
      <y>60</y>
      <width>250</width>
-     <height>150</height>
+     <height>231</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -197,8 +197,8 @@ border-radius: 5px
     <rect>
      <x>300</x>
      <y>60</y>
-     <width>250</width>
-     <height>150</height>
+     <width>301</width>
+     <height>231</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -208,8 +208,8 @@ border-radius: 5px
   <widget class="QPushButton" name="cancel">
    <property name="geometry">
     <rect>
-     <x>330</x>
-     <y>290</y>
+     <x>310</x>
+     <y>360</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -305,8 +305,8 @@ border-radius: 5px
   <widget class="QLineEdit" name="currentFile">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>250</y>
+     <x>140</x>
+     <y>320</y>
      <width>271</width>
      <height>20</height>
     </rect>
@@ -315,14 +315,37 @@ border-radius: 5px
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>230</y>
-     <width>56</width>
-     <height>14</height>
+     <x>140</x>
+     <y>290</y>
+     <width>121</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#838383;&quot;&gt;Plot From:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="textEdit_Comments">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>60</y>
+     <width>281</width>
+     <height>231</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>10</y>
+     <width>101</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; color:#838383;&quot;&gt;Comments:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
  </widget>

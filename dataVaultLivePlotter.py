@@ -9,8 +9,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtPrintSupport import QPrinter
-from PyQt5.QtWebKitWidgets import QWebView
-#from PyQt5.QtWebEngineWidgets import QWebEngineView
+#from PyQt5.QtWebKitWidgets import QWebView
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from twisted.internet.defer import inlineCallbacks, Deferred
 import numpy as np
 import pyqtgraph as pg
@@ -106,7 +106,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
         try:
             self.cxn = yield connectAsync(name = 'dvPlotter')
             self.dv = yield self.cxn.data_vault
-
+            print('done')
         except:
             print("Either no LabRad connection or DataVault connection.")
         
@@ -2387,6 +2387,7 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
         self.formFlag = True
         self.setupTables()
     
+
         self.cancelBtn.clicked.connect(self.closeWindow)
         self.ok.clicked.connect(self.initPlot)
         
@@ -2406,6 +2407,8 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
         
         self.popAxes(self.reactor)
         
+        #self.autofillLP(self.reactor)
+
         
     def moveDefault(self):
         self.move(400,25)
@@ -2632,7 +2635,49 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
 
             self.z2.addItem(str(var[0]))
             self.y1.addItem(str(var[0]))
-            
+        
+        ### everything below this auto fills in the any 'live_plot' specified
+        params = yield self.dv.get_parameters()
+        if params != None:
+            params = dict((x,y) for x,y in params)  
+            parKeys = params.keys()
+            if 'live_plots' in parKeys:
+                live_plots_lst = params['live_plots']
+                for plot_defn in live_plots_lst:
+                    if len(plot_defn) == 2:
+                        x_label = plot_defn[0]
+                        y_label = plot_defn[1]
+                        print(x_label)
+
+                        x1_ind = self.x1.findText(x_label)
+                        y1_ind = self.y1.findText(y_label)
+
+                        print(x1_ind)
+                        if x1_ind >= 0 and y1_ind >= 0:
+                            self.x1.setCurrentIndex(x1_ind)
+                            self.y1.setCurrentIndex(y1_ind)
+                            self.add1DPlot()
+
+                    elif len(plot_defn) == 3:
+                        x_label = plot_defn[0]
+                        y_label = plot_defn[1]
+                        z_label = plot_defn[2]
+
+                        x2_ind = self.x2.findText(x_label)
+                        y2_ind = self.y2.findText(y_label)
+                        z2_ind = self.z2.findText(y_label)
+                        if x2_ind >= 0 and y2_ind >= 0 and z2_ind>=0:
+                            self.x2.setCurrentIndex(x2_ind)
+                            self.y2.setCurrentIndex(y2_ind)
+                            self.z2.setCurrentIndex(z2_ind)
+                            self.add2DPlot()
+
+        self.x1.setCurrentIndex(0)
+        self.y1.setCurrentIndex(0)
+        self.x2.setCurrentIndex(0)
+        self.y2.setCurrentIndex(0)
+        self.z2.setCurrentIndex(0)
+
     @inlineCallbacks
     def initPlot(self, c = None):
         
@@ -2748,7 +2793,7 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
             yield self.sleep(0.5)
             self.close()
 
-            
+
     def sleep(self,secs):
         d = Deferred()
         self.reactor.callLater(secs,d.callback,'Sleeping')
@@ -2992,16 +3037,27 @@ class dataVaultExplorer(QtGui.QDialog, Ui_DataVaultExp):
             yield self.popDirs(None, self.reactor)
 
     def fileSelectselectFile(self):
+        print('f')
         self.fileSelect()
         self.selectFile()
 
-    def fileSelect(self):
+    @inlineCallbacks
+    def fileSelect(self, c =  None):
+        print('g')
         file = self.fileList.currentItem()
         self.selectedFile = file.text()
         
+        yield self.dv.open(str(file.text()))
+        comment_tuple = yield self.dv.get_comments()
+        comment = comment_tuple[0][2]
+        self.textEdit_Comments.setText(comment)
+
         self.selectedDir = self.currentDir
         self.currentFile.setText(file.text())
         
+
+
+
     def selectFile(self):
         if self.source == 'saved':
             if self.selectedFile != '':
