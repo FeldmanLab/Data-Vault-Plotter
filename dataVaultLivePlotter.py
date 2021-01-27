@@ -2596,10 +2596,15 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
         
     def rmv1DPlot(self):
         r = int(self.onePlots.currentRow())
+        if r == -1 or r == 0:
+            r = int(self.onePlots.rowCount()-1)
         self.plot1DInfo.pop(r, None)
+        #print('r :' + str(r))
+        #print(self.plot1DInfo)
         self.onePlots.removeRow(r)
         if r != self.num1Plots:
             for i in range(r+1, self.num1Plots+1):
+                #print(i)
                 self.plot1DInfo[i - 1] = self.plot1DInfo.pop(i)
         self.num1Plots -= 1
         
@@ -2647,12 +2652,12 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
                     if len(plot_defn) == 2:
                         x_label = plot_defn[0]
                         y_label = plot_defn[1]
-                        print(x_label)
+                        #print(x_label)
 
                         x1_ind = self.x1.findText(x_label)
                         y1_ind = self.y1.findText(y_label)
 
-                        print(x1_ind)
+                        #print(x1_ind)
                         if x1_ind >= 0 and y1_ind >= 0:
                             self.x1.setCurrentIndex(x1_ind)
                             self.y1.setCurrentIndex(y1_ind)
@@ -2665,7 +2670,8 @@ class plotSetup(QtGui.QDialog, Ui_PlotSetup):
 
                         x2_ind = self.x2.findText(x_label)
                         y2_ind = self.y2.findText(y_label)
-                        z2_ind = self.z2.findText(y_label)
+                        z2_ind = self.z2.findText(z_label)
+
                         if x2_ind >= 0 and y2_ind >= 0 and z2_ind>=0:
                             self.x2.setCurrentIndex(x2_ind)
                             self.y2.setCurrentIndex(y2_ind)
@@ -3043,13 +3049,15 @@ class dataVaultExplorer(QtGui.QDialog, Ui_DataVaultExp):
 
     @inlineCallbacks
     def fileSelect(self, c =  None):
-        print('g')
         file = self.fileList.currentItem()
         self.selectedFile = file.text()
         
         yield self.dv.open(str(file.text()))
         comment_tuple = yield self.dv.get_comments()
-        comment = comment_tuple[0][2]
+        try:
+            comment = comment_tuple[0][2]
+        except: ## this takes care of trying to plot from files which are still being written to by Multi Sweeper (say)
+            comment = 'Comment not written'
         self.textEdit_Comments.setText(comment)
 
         self.selectedDir = self.currentDir
