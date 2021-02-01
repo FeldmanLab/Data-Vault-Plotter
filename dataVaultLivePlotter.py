@@ -57,7 +57,7 @@ ID_NEWDATA = 999
 
     
 class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
-    def __init__(self, reactor, parent = None):
+    def __init__(self, reactor, arguments, parent = None):
         super(dvPlotter, self).__init__(parent)
         QtGui.QMainWindow.__init__(self)
         
@@ -68,10 +68,13 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
         self.reactor = reactor
         
         self.moveDefault()
-        self.initReact(self.reactor)
-        
-        self.plotSavedBtn.clicked.connect(self.plotSavedDataFunc)
+        self.listStatus = False
+
         self.listen.clicked.connect(self.setupListener)
+
+        self.initReact(self.reactor,arguments)
+
+        self.plotSavedBtn.clicked.connect(self.plotSavedDataFunc)
         self.closeWin.clicked.connect(self.closePlotter)
         self.plotLive.clicked.connect(self.plotLiveData)
         
@@ -82,7 +85,6 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
         
         self.plotSavedBtn.setEnabled(True)
         
-        self.listStatus = False
         
         self.allowPlot = False
         
@@ -90,10 +92,9 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
         self.existing2DPlotDict = {}
         self.existing1DPlotDict = {}
         
-        self.listenTo = ['']
-        
     def moveDefault(self):
         self.move(25,25)
+
         
     def openHelpWindow(self):
         self.helpWindowDlg = helpTextWindow(self)
@@ -101,12 +102,22 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
         self.helpBtn.setEnabled(False)
         
     @inlineCallbacks
-    def initReact(self, c):
+    def initReact(self, c,arguments):
         from labrad.wrappers import connectAsync
         try:
             self.cxn = yield connectAsync(name = 'dvPlotter')
             self.dv = yield self.cxn.data_vault
             print('done')
+            if len(arguments) > 1:
+                self.setListenDir(arguments[-1],[''] + arguments[1:])
+                #self.listenTo = [''] + arguments[1:]
+                #print(self.listenTo)
+                #print('h')
+                self.listStatus = False
+                self.initListener(self.reactor)
+            else:
+                self.listenTo = ['']
+
         except:
             print("Either no LabRad connection or DataVault connection.")
         
@@ -139,6 +150,7 @@ class dvPlotter(QtGui.QMainWindow, Ui_MainWin):
             style = regStr + " " + pressStr
             self.changeDir.setStyleSheet(style)
         except:
+            print('f')
             print("Either no LabRad connection or DataVault connection.")
 
     @inlineCallbacks
@@ -3112,6 +3124,6 @@ if __name__ == "__main__":
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor
-    window = dvPlotter(reactor)
+    window = dvPlotter(reactor,sys.argv)
     window.show()
     reactor.run()
